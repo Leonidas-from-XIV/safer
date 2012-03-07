@@ -1,0 +1,4 @@
+kernel
+kernel.o
+loader.o
+*.swp
