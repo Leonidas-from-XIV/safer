@@ -1,9 +1,12 @@
 #include "multiboot.h"
+#include "safer.h"
 
 static unsigned char *videoram = (unsigned char *)0xb8000;
 static char row = 0;
 static char line = 0;
 static int newline = 0;
+
+typedef unsigned long long int uint64_t;
 
 void write_string(const char *string)
 {
@@ -43,7 +46,7 @@ void write_string(const char *string)
     }
 }
 
-int hasvmx(void) {
+int has_vmx(void) {
     int flags;
     /* put 1 into EAX and run CPUID instruction and read ECX into flags */
     asm volatile(
@@ -53,6 +56,14 @@ int hasvmx(void) {
     );
     /* VMX is bit 5 of ECX */
     return flags & 0x20;
+}
+
+uint64_t read_msr(int msr) {
+    uint64_t result;
+    unsigned int high, low;
+    asm volatile ( "rdmsr;" : "=d"(high), "=a"(low) : "c"(msr) );
+    result = ((uint64_t)high<<32) + low; 
+    return result;
 }
 
 void kmain(void* mbd, unsigned int magic)
@@ -83,11 +94,15 @@ void kmain(void* mbd, unsigned int magic)
    }
 
    write_string("VMX detection: ");
-   if (hasvmx()) {
-       write_string("VMX detected");
+   if (has_vmx()) {
+       write_string("VMX detected\n");
    }
    else {
-       write_string("No VMX detected");
+       write_string("No VMX detected\n");
+       write_string("Halting");
+       while (1) {}
    }
-   write_string("\n");
+
+   // we got here, so we are VMX-capable
+   uint64_t basic = read_msr(IA32_VMX_BASIC);
 }
