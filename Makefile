@@ -1,4 +1,4 @@
-CFLAGS= -Wall -Wextra -nostdlib -fno-builtin -nostartfiles -nodefaultlibs -m32
+CFLAGS= -Wall -Wextra -nostdlib -fno-builtin -nostartfiles -nodefaultlibs -m32 -O0 -g
 LDFLAGS= -T linker.ld -melf_i386
 ASFLAGS= --32
 
