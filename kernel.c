@@ -66,6 +66,44 @@ uint64_t read_msr(int msr) {
     return result;
 }
 
+char * itoa( int value, char * str, int base )
+{
+    char * rc;
+    char * ptr;
+    char * low;
+    // Check for supported base.
+    if ( base < 2 || base > 36 )
+    {
+        *str = '\0';
+        return str;
+    }
+    rc = ptr = str;
+    // Set '-' for negative decimals.
+    if ( value < 0 && base == 10 )
+    {
+        *ptr++ = '-';
+    }
+    // Remember where the numbers start.
+    low = ptr;
+    // The actual conversion.
+    do
+    {
+        // Modulo is negative for negative value. This trick makes abs() unnecessary.
+        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + value % base];
+        value /= base;
+    } while ( value );
+    // Terminating the string.
+    *ptr-- = '\0';
+    // Invert the numbers.
+    while ( low < ptr )
+    {
+        char tmp = *low;
+        *low++ = *ptr;
+        *ptr-- = tmp;
+    }
+    return rc;
+}
+
 void kmain(void* mbd, unsigned int magic)
 {
    if (magic != 0x2BADB002)
@@ -105,4 +143,7 @@ void kmain(void* mbd, unsigned int magic)
 
    // we got here, so we are VMX-capable
    uint64_t basic = read_msr(IA32_VMX_BASIC);
+   char buffer[80];
+   itoa(basic, buffer, 10);
+   write_string(buffer);
 }
